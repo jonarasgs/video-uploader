@@ -1,0 +1,43 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 600px;
+  background: #fff;
+  margin: 30px auto;
+  padding: 20px;
+  box-shadow: 0 0 10px #ccc;
+  border-radius: 8px;
+}
+
+input, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+button {
+  background: #0077ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #005fcc;
+}
+
+#history {
+  margin-top: 20px;
+}
+
+.history-item {
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  margin-top: 10px;
+}

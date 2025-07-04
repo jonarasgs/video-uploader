@@ -3,23 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upload de Anime</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Upload de Vídeo</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Enviar Episódio de Anime</h1>
-    <input type="text" id="anime" placeholder="Nome do anime">
-    <input type="text" id="season" placeholder="Temporada">
-    <input type="text" id="episode" placeholder="Episódio">
+    <h1>Enviar Episódio</h1>
+
+    <label for="category">Categoria:</label>
+    <select id="category">
+      <option value="">Selecione uma categoria</option>
+      <option value="Anime">Anime</option>
+      <option value="Filme">Filme</option>
+      <option value="OVA">OVA</option>
+    </select>
+
+    <input type="text" id="anime" placeholder="Nome do anime/filme/OVA" />
+    <input type="text" id="season" placeholder="Temporada" />
+    <input type="text" id="episode" placeholder="Episódio" />
     <textarea id="videoDesc" placeholder="Descrição (opcional)"></textarea>
-    <input type="file" id="fileInput" accept="video/*">
+    <input type="file" id="fileInput" accept="video/*" />
+
     <button id="uploadBtn" onclick="upload()">Enviar</button>
     <p id="status"></p>
 
     <h2>Histórico</h2>
     <div id="history"></div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 async function upload() {
   const file = document.getElementById("fileInput").files[0];
+  const category = document.getElementById("category").value.trim();
   const anime = document.getElementById("anime").value.trim();
   const season = document.getElementById("season").value.trim();
   const episode = document.getElementById("episode").value.trim();
@@ -7,12 +8,13 @@ async function upload() {
   const status = document.getElementById("status");
   const btn = document.getElementById("uploadBtn");
 
-  if (!file || !anime || !season || !episode) {
+  if (!file || !category || !anime || !season || !episode) {
     alert("Preencha todos os campos e selecione um arquivo.");
     return;
   }
 
   const name = `${anime} - Temporada ${season} - Episódio ${episode}`;
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -25,46 +27,64 @@ async function upload() {
       body: formData
     });
 
-    const json = await res.json(); // JSON válido esperado
+    const json = await res.json();
+
     if (json.status !== "ok") {
-      console.error("Resposta inesperada:", json);
-      status.textContent = "Erro no envio! Resposta inválida.";
+      status.textContent = "Erro no envio! Tente novamente.";
       btn.disabled = false;
       return;
     }
 
-    const link = json.data.downloadPage;
-    const direct = json.data.directLink;
+    // link da página e link direto do vídeo
+    const downloadPage = json.data.downloadPage;
+    const directLink = json.data.directLink;
 
-    const item = { name, desc: desc || "Sem descrição.", url: link, direct, date: new Date().toLocaleString() };
+    const item = {
+      category,
+      name,
+      desc: desc || "Sem descrição.",
+      downloadPage,
+      directLink,
+      date: new Date().toLocaleString()
+    };
+
     saveToHistory(item);
     showHistory();
-    status.innerHTML = `Enviado! <a href="${link}" target="_blank">Página</a>`;
+
+    status.innerHTML = `Enviado! <a href="${downloadPage}" target="_blank">Ver página</a>`;
   } catch (err) {
-    console.error(err);
     status.textContent = "Erro no envio!";
+    console.error(err);
   }
 
   btn.disabled = false;
 }
 
 function saveToHistory(item) {
-  const h = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  h.unshift(item);
-  localStorage.setItem("videoHistory", JSON.stringify(h));
+  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
+  history.unshift(item);
+  localStorage.setItem("videoHistory", JSON.stringify(history));
 }
 
 function showHistory() {
-  const cont = document.getElementById("history");
-  const h = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  cont.innerHTML = "";
-  h.forEach(item => {
+  const container = document.getElementById("history");
+  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
+  container.innerHTML = "";
+
+  history.forEach(item => {
     const div = document.createElement("div");
     div.className = "history-item";
-    div.innerHTML = `<strong>${item.name}</strong> <small>${item.date}</small><br>
+
+    // Link para o vídeo direto, se existir; senão link para a página
+    const videoUrl = item.directLink || item.downloadPage || "#";
+
+    div.innerHTML = `
+      <strong>[${item.category}] ${item.name}</strong> <small>${item.date}</small><br>
       <em>${item.desc}</em><br>
-      <a href="${item.direct}" target="_blank">▶️ Ver vídeo</a>`;
-    cont.appendChild(div);
+      <a href="${videoUrl}" target="_blank">▶️ Ver vídeo</a>
+    `;
+
+    container.appendChild(div);
   });
 }
 

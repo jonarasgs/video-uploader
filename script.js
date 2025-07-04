@@ -1,3 +1,8 @@
+const status = document.getElementById("status");
+const btn = document.getElementById("uploadBtn");
+const player = document.getElementById("player");
+const searchInput = document.getElementById("search");
+
 async function upload() {
   const file = document.getElementById("fileInput").files[0];
   const category = document.getElementById("category").value.trim();
@@ -5,8 +10,6 @@ async function upload() {
   const season = document.getElementById("season").value.trim();
   const episode = document.getElementById("episode").value.trim();
   const desc = document.getElementById("videoDesc").value.trim();
-  const status = document.getElementById("status");
-  const btn = document.getElementById("uploadBtn");
 
   if (!file || !category || !anime || !season || !episode) {
     alert("Preencha todos os campos e selecione um arquivo.");
@@ -22,28 +25,25 @@ async function upload() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("https://upload.gofile.io/uploadfile", {
+    const res = await fetch("https://pixeldrain.com/api/file", {
       method: "POST",
       body: formData
     });
 
     const json = await res.json();
 
-    if (json.status !== "ok") {
+    if (!json.shortened) {
       status.textContent = "Erro no envio! Tente novamente.";
       btn.disabled = false;
       return;
     }
 
-    // link da página e link direto do vídeo
-    const downloadPage = json.data.downloadPage;
-    const directLink = json.data.directLink;
+    const directLink = `https://pixeldrain.com/api/file/${json.shortened}`;
 
     const item = {
       category,
       name,
       desc: desc || "Sem descrição.",
-      downloadPage,
       directLink,
       date: new Date().toLocaleString()
     };
@@ -51,7 +51,14 @@ async function upload() {
     saveToHistory(item);
     showHistory();
 
-    status.innerHTML = `Enviado! <a href="${downloadPage}" target="_blank">Ver página</a>`;
+    status.innerHTML = `Enviado! <a href="${directLink}" target="_blank">Ver vídeo</a>`;
+
+    // Atualiza player para tocar vídeo enviado
+    player.src = directLink;
+    player.style.display = "block";
+    player.load();
+    player.play();
+
   } catch (err) {
     status.textContent = "Erro no envio!";
     console.error(err);
@@ -66,26 +73,53 @@ function saveToHistory(item) {
   localStorage.setItem("videoHistory", JSON.stringify(history));
 }
 
-function showHistory() {
+function showHistory(filter = "") {
   const container = document.getElementById("history");
   const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
   container.innerHTML = "";
 
-  history.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "history-item";
+  const lowerFilter = filter.toLowerCase();
 
-    // Link para o vídeo direto, se existir; senão link para a página
-    const videoUrl = item.directLink || item.downloadPage || "#";
+  history.forEach((item, index) => {
+    if (
+      !filter ||
+      item.name.toLowerCase().includes(lowerFilter) ||
+      item.category.toLowerCase().includes(lowerFilter) ||
+      item.desc.toLowerCase().includes(lowerFilter) ||
+      item.date.toLowerCase().includes(lowerFilter)
+    ) {
+      const div = document.createElement("div");
+      div.className = "history-item";
 
-    div.innerHTML = `
-      <strong>[${item.category}] ${item.name}</strong> <small>${item.date}</small><br>
-      <em>${item.desc}</em><br>
-      <a href="${videoUrl}" target="_blank">▶️ Ver vídeo</a>
-    `;
+      div.innerHTML = `
+        <strong>[${item.category}] ${item.name}</strong> <small>${item.date}</small><br>
+        <em>${item.desc}</em><br>
+        <a href="${item.directLink}" target="_blank">▶️ Ver vídeo (nova aba)</a> |
+        <a href="#" class="play-link" data-index="${index}">▶️ Tocar aqui</a>
+      `;
 
-    container.appendChild(div);
+      container.appendChild(div);
+    }
+  });
+
+  // Configura eventos para tocar vídeo no player
+  document.querySelectorAll(".play-link").forEach(link => {
+    link.onclick = e => {
+      e.preventDefault();
+      const idx = e.target.getAttribute("data-index");
+      const video = history[idx];
+      if (video) {
+        player.src = video.directLink;
+        player.style.display = "block";
+        player.load();
+        player.play();
+      }
+    };
   });
 }
+
+searchInput.addEventListener("input", e => {
+  showHistory(e.target.value);
+});
 
 showHistory();

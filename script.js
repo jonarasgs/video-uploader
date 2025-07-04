@@ -1,36 +1,59 @@
 async function upload() {
   const file = document.getElementById("fileInput").files[0];
-  const name = document.getElementById("videoName").value;
-  const desc = document.getElementById("videoDesc").value;
+  const anime = document.getElementById("anime").value.trim();
+  const season = document.getElementById("season").value.trim();
+  const episode = document.getElementById("episode").value.trim();
+  const desc = document.getElementById("videoDesc").value.trim();
+  const status = document.getElementById("status");
+  const btn = document.getElementById("uploadBtn");
 
-  if (!file) return alert("Escolha um arquivo de vídeo.");
+  if (!file || !anime || !season || !episode) {
+    alert("Preencha todos os campos e selecione um arquivo.");
+    return;
+  }
+
+  const name = `${anime} - Temporada ${season} - Episódio ${episode}`;
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch("https://api.gofile.io/uploadFile", {
-    method: "POST",
-    body: formData
-  });
+  // Mostra carregando
+  status.textContent = "Enviando...";
+  btn.disabled = true;
 
-  const json = await res.json();
+  try {
+    const res = await fetch("https://api.gofile.io/uploadFile", {
+      method: "POST",
+      body: formData
+    });
 
-  if (json.status !== "ok") {
-    alert("Erro no envio!");
-    return;
+    const json = await res.json();
+
+    if (json.status !== "ok") {
+      status.textContent = "Erro ao enviar. Tente novamente.";
+      btn.disabled = false;
+      return;
+    }
+
+    const link = json.data.downloadPage;
+
+    const item = {
+      name,
+      desc: desc || "Sem descrição.",
+      url: link,
+      date: new Date().toLocaleString()
+    };
+
+    saveToHistory(item);
+    showHistory();
+
+    status.textContent = "Enviado com sucesso!";
+  } catch (err) {
+    status.textContent = "Erro no envio!";
+    console.error(err);
   }
 
-  const link = json.data.downloadPage;
-
-  const item = {
-    name: name || file.name,
-    desc: desc || "Sem descrição.",
-    url: link,
-    date: new Date().toLocaleString()
-  };
-
-  saveToHistory(item);
-  showHistory();
+  btn.disabled = false;
 }
 
 function saveToHistory(item) {

@@ -13,69 +13,58 @@ async function upload() {
   }
 
   const name = `${anime} - Temporada ${season} - Episódio ${episode}`;
-
   const formData = new FormData();
   formData.append("file", file);
 
-  // Mostra carregando
   status.textContent = "Enviando...";
   btn.disabled = true;
 
   try {
-    const res = await fetch("https://api.gofile.io/uploadFile", {
+    const res = await fetch("https://upload.gofile.io/uploadfile", {
       method: "POST",
       body: formData
     });
 
-    const json = await res.json();
-
+    const json = await res.json(); // JSON válido esperado
     if (json.status !== "ok") {
-      status.textContent = "Erro ao enviar. Tente novamente.";
+      console.error("Resposta inesperada:", json);
+      status.textContent = "Erro no envio! Resposta inválida.";
       btn.disabled = false;
       return;
     }
 
     const link = json.data.downloadPage;
+    const direct = json.data.directLink;
 
-    const item = {
-      name,
-      desc: desc || "Sem descrição.",
-      url: link,
-      date: new Date().toLocaleString()
-    };
-
+    const item = { name, desc: desc || "Sem descrição.", url: link, direct, date: new Date().toLocaleString() };
     saveToHistory(item);
     showHistory();
-
-    status.textContent = "Enviado com sucesso!";
+    status.innerHTML = `Enviado! <a href="${link}" target="_blank">Página</a>`;
   } catch (err) {
-    status.textContent = "Erro no envio!";
     console.error(err);
+    status.textContent = "Erro no envio!";
   }
 
   btn.disabled = false;
 }
 
 function saveToHistory(item) {
-  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  history.unshift(item);
-  localStorage.setItem("videoHistory", JSON.stringify(history));
+  const h = JSON.parse(localStorage.getItem("videoHistory") || "[]");
+  h.unshift(item);
+  localStorage.setItem("videoHistory", JSON.stringify(h));
 }
 
 function showHistory() {
-  const container = document.getElementById("history");
-  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  container.innerHTML = "";
-
-  history.forEach(item => {
+  const cont = document.getElementById("history");
+  const h = JSON.parse(localStorage.getItem("videoHistory") || "[]");
+  cont.innerHTML = "";
+  h.forEach(item => {
     const div = document.createElement("div");
     div.className = "history-item";
-    div.innerHTML = `
-      <strong>${item.name}</strong> <small>${item.date}</small><br>
+    div.innerHTML = `<strong>${item.name}</strong> <small>${item.date}</small><br>
       <em>${item.desc}</em><br>
-      <a href="${item.url}" target="_blank">🔗 Ver página</a>
-    `;
-    container.appendChild(div);
+      <a href="${item.direct}" target="_blank">▶️ Ver vídeo</a>`;
+    cont.appendChild(div);
   });
 }
 

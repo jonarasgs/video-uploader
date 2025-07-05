@@ -1,23 +1,22 @@
-const status = document.getElementById("status");
-const btn = document.getElementById("uploadBtn");
-const player = document.getElementById("player");
-const searchInput = document.getElementById("search");
+const status = document.getElementById("status"),
+      btn = document.getElementById("uploadBtn"),
+      player = document.getElementById("player"),
+      searchInput = document.getElementById("search");
 
 async function upload() {
-  const file = document.getElementById("fileInput").files[0];
-  const category = document.getElementById("category").value.trim();
-  const anime = document.getElementById("anime").value.trim();
-  const season = document.getElementById("season").value.trim();
-  const episode = document.getElementById("episode").value.trim();
-  const desc = document.getElementById("videoDesc").value.trim();
+  const file = document.getElementById("fileInput").files[0],
+        category = document.getElementById("category").value.trim(),
+        anime = document.getElementById("anime").value.trim(),
+        season = document.getElementById("season").value.trim(),
+        episode = document.getElementById("episode").value.trim(),
+        desc = document.getElementById("videoDesc").value.trim();
 
   if (!file || !category || !anime || !season || !episode) {
-    alert("Preencha todos os campos e selecione um arquivo.");
+    alert("Preencha todos os campos e selecione um vídeo.");
     return;
   }
 
   const name = `${anime} - Temporada ${season} - Episódio ${episode}`;
-
   const formData = new FormData();
   formData.append("file", file);
 
@@ -25,90 +24,70 @@ async function upload() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("https://api.gofile.io/uploadFile", {
+    const res = await fetch("https://upload.gofile.io/uploadfile", {
       method: "POST",
-      body: formData,
+      body: formData
     });
     const json = await res.json();
 
     if (json.status !== "ok") {
-      status.textContent = "Erro no envio! Tente novamente.";
-      btn.disabled = false;
-      return;
+      throw new Error("upload falhou");
     }
 
-    // A URL para download da página do arquivo
-    const directLink = json.data.downloadPage;
-
-    const item = {
-      category,
-      name,
-      desc: desc || "Sem descrição.",
-      directLink,
-      date: new Date().toLocaleString(),
-    };
+    const link = json.data.downloadPage,
+          item = {category, name, desc: desc||"Sem descrição.", link, date: new Date().toLocaleString()};
 
     saveToHistory(item);
     showHistory();
 
-    status.innerHTML = `Enviado! <a href="${directLink}" target="_blank">Ver vídeo</a>`;
+    status.innerHTML = `Enviado! <a href="${link}" target="_blank">Ver vídeo</a>`;
 
-    player.src = directLink;
+    player.src = link;
     player.style.display = "block";
     player.load();
     player.play();
-
-  } catch (err) {
-    status.textContent = "Erro no envio!";
-    console.error(err);
   }
-
+  catch (e) {
+    console.error(e);
+    status.textContent = "Erro no envio! (" + (e.message||"") + ")";
+  }
   btn.disabled = false;
 }
 
 function saveToHistory(item) {
-  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  history.unshift(item);
-  localStorage.setItem("videoHistory", JSON.stringify(history));
+  const h = JSON.parse(localStorage.getItem("videoHistory")||"[]");
+  h.unshift(item);
+  localStorage.setItem("videoHistory", JSON.stringify(h));
 }
 
-function showHistory(filter = "") {
-  const container = document.getElementById("history");
-  const history = JSON.parse(localStorage.getItem("videoHistory") || "[]");
-  container.innerHTML = "";
+function showHistory(filter="") {
+  const cont = document.getElementById("history"),
+        h = JSON.parse(localStorage.getItem("videoHistory")||"[]");
+  cont.innerHTML="";
 
-  const lowerFilter = filter.toLowerCase();
+  const f = filter.toLowerCase();
+  h.forEach((item,i)=>{
+    if (!filter || item.name.toLowerCase().includes(f)||item.category.toLowerCase().includes(f)
+      ||item.desc.toLowerCase().includes(f)||item.date.toLowerCase().includes(f)) {
 
-  history.forEach((item, index) => {
-    if (
-      !filter ||
-      item.name.toLowerCase().includes(lowerFilter) ||
-      item.category.toLowerCase().includes(lowerFilter) ||
-      item.desc.toLowerCase().includes(lowerFilter) ||
-      item.date.toLowerCase().includes(lowerFilter)
-    ) {
       const div = document.createElement("div");
-      div.className = "history-item";
-
-      div.innerHTML = `
-        <strong>[${item.category}] ${item.name}</strong> <small>${item.date}</small><br>
+      div.className="history-item";
+      div.innerHTML =
+        `<strong>[${item.category}] ${item.name}</strong> <small>${item.date}</small><br>
         <em>${item.desc}</em><br>
-        <a href="${item.directLink}" target="_blank">▶️ Ver vídeo (nova aba)</a> |
-        <a href="#" class="play-link" data-index="${index}">▶️ Tocar aqui</a>
-      `;
-
-      container.appendChild(div);
+        <a href="${item.link}" target="_blank">▶️ Ver (nova aba)</a> |
+        <a href="#" class="play-link" data-i="${i}">▶️ Tocar aqui</a>`;
+      cont.appendChild(div);
     }
   });
 
-  // Eventos para tocar no player ao clicar
-  document.querySelectorAll(".play-link").forEach((link) => {
-    link.onclick = (e) => {
+  cont.querySelectorAll(".play-link").forEach(a=>{
+    a.onclick = e => {
       e.preventDefault();
-      const idx = e.target.getAttribute("data-index");
-      const video = history[idx];
+      const idx = e.target.getAttribute("data-i"),
+            video = JSON.parse(localStorage.getItem("videoHistory")||"[]")[idx];
       if (video) {
-        player.src = video.directLink;
+        player.src = video.link;
         player.style.display = "block";
         player.load();
         player.play();
@@ -117,8 +96,5 @@ function showHistory(filter = "") {
   });
 }
 
-searchInput.addEventListener("input", (e) => {
-  showHistory(e.target.value);
-});
-
+searchInput.addEventListener("input", e=>showHistory(e.target.value));
 showHistory();

@@ -25,20 +25,20 @@ async function upload() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("https://pixeldrain.com/api/file", {
+    const res = await fetch("https://api.gofile.io/uploadFile", {
       method: "POST",
       body: formData
     });
 
     const json = await res.json();
 
-    if (!json.shortened) {
+    if (!json.status || json.status !== "ok") {
       status.textContent = "Erro no envio! Tente novamente.";
       btn.disabled = false;
       return;
     }
 
-    const directLink = `https://pixeldrain.com/api/file/${json.shortened}`;
+    const directLink = json.data.downloadPage;
 
     const item = {
       category,
@@ -53,7 +53,6 @@ async function upload() {
 
     status.innerHTML = `Enviado! <a href="${directLink}" target="_blank">Ver vídeo</a>`;
 
-    // Atualiza player para tocar vídeo enviado
     player.src = directLink;
     player.style.display = "block";
     player.load();
@@ -102,7 +101,6 @@ function showHistory(filter = "") {
     }
   });
 
-  // Configura eventos para tocar vídeo no player
   document.querySelectorAll(".play-link").forEach(link => {
     link.onclick = e => {
       e.preventDefault();

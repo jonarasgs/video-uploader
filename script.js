@@ -4,12 +4,12 @@ const status = document.getElementById("status"),
       searchInput = document.getElementById("search");
 
 async function upload() {
-  const file = document.getElementById("fileInput").files[0];
-  const category = document.getElementById("category").value.trim();
-  const anime = document.getElementById("anime").value.trim();
-  const season = document.getElementById("season").value.trim();
-  const episode = document.getElementById("episode").value.trim();
-  const desc = document.getElementById("videoDesc").value.trim();
+  const file = document.getElementById("fileInput").files[0],
+        category = document.getElementById("category").value.trim(),
+        anime = document.getElementById("anime").value.trim(),
+        season = document.getElementById("season").value.trim(),
+        episode = document.getElementById("episode").value.trim(),
+        desc = document.getElementById("videoDesc").value.trim();
 
   if (!file || !category || !anime || !season || !episode) {
     alert("Preencha todos os campos e escolha um vídeo.");
@@ -18,28 +18,31 @@ async function upload() {
 
   const name = `${anime} - Temporada ${season} - Episódio ${episode}`;
   const formData = new FormData();
-  formData.append("file", file, file.name);
+  formData.append("file", file);
 
   status.textContent = "Enviando...";
   btn.disabled = true;
 
   try {
-    const res = await fetch(`https://transfer.sh/${file.name}`, {
-      method: "PUT",
-      body: formData
+    const res = await fetch("https://api.publit.io/v1/videos", {
+      method: "POST",
+      body: formData,
+      headers: {
+        'Authorization': 'Basic ' + btoa('PUB_USER:PUB_SECRET')
+      }
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const link = await res.text();
+    const json = await res.json();
 
-    const item = {
-      category, name, desc: desc||"Sem descrição.",
-      link: link.trim(), date: new Date().toLocaleString()
-    };
+    if (!json.success) throw new Error("Upload falhou");
+
+    const link = json.url; // Link direto para o MP4
+
+    const item = { category, name, desc: desc||"Sem descrição.", link, date: new Date().toLocaleString() };
     saveToHistory(item);
     showHistory();
 
-    status.innerHTML = `Enviado! <a href="${item.link}" target="_blank">Ver em nova aba</a>`;
-    player.src = item.link;
+    status.innerHTML = `Enviado! <a href="${link}" target="_blank">Ver em nova aba</a>`;
+    player.src = link;
     player.style.display = "block";
     player.load();
     player.play();
@@ -95,5 +98,5 @@ function showHistory(filter="") {
   });
 }
 
-searchInput.addEventListener("input", e=>showHistory(e.target.value));
+searchInput.addEventListener("input", e => showHistory(e.target.value));
 showHistory();

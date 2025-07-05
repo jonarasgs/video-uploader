@@ -27,17 +27,17 @@ async function upload() {
   try {
     const res = await fetch("https://api.gofile.io/uploadFile", {
       method: "POST",
-      body: formData
+      body: formData,
     });
-
     const json = await res.json();
 
-    if (!json.status || json.status !== "ok") {
+    if (json.status !== "ok") {
       status.textContent = "Erro no envio! Tente novamente.";
       btn.disabled = false;
       return;
     }
 
+    // A URL para download da página do arquivo
     const directLink = json.data.downloadPage;
 
     const item = {
@@ -45,7 +45,7 @@ async function upload() {
       name,
       desc: desc || "Sem descrição.",
       directLink,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString(),
     };
 
     saveToHistory(item);
@@ -101,8 +101,9 @@ function showHistory(filter = "") {
     }
   });
 
-  document.querySelectorAll(".play-link").forEach(link => {
-    link.onclick = e => {
+  // Eventos para tocar no player ao clicar
+  document.querySelectorAll(".play-link").forEach((link) => {
+    link.onclick = (e) => {
       e.preventDefault();
       const idx = e.target.getAttribute("data-index");
       const video = history[idx];
@@ -116,7 +117,7 @@ function showHistory(filter = "") {
   });
 }
 
-searchInput.addEventListener("input", e => {
+searchInput.addEventListener("input", (e) => {
   showHistory(e.target.value);
 });
 

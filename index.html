@@ -3,39 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Uploader Gofile.io</title>
+  <title>Uploader Gofile – estável</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Upload de Vídeo</h1>
+    <h1>Upload Gofile.io</h1>
 
     <label for="category">Categoria:</label>
     <select id="category">
-      <option value="">Selecione uma categoria</option>
+      <option value="">Selecione</option>
       <option value="Anime">Anime</option>
       <option value="Filme">Filme</option>
       <option value="OVA">OVA</option>
     </select>
 
-    <input type="text" id="anime" placeholder="Nome do anime/filme/OVA" />
-    <input type="text" id="season" placeholder="Temporada" />
-    <input type="text" id="episode" placeholder="Episódio" />
+    <input type="text" id="anime" placeholder="Nome do anime/filme/OVA"/>
+    <input type="text" id="season" placeholder="Temporada"/>
+    <input type="text" id="episode" placeholder="Episódio"/>
     <textarea id="videoDesc" placeholder="Descrição (opcional)"></textarea>
-    <input type="file" id="fileInput" accept="video/*" />
+    <input type="file" id="fileInput" accept="video/*"/>
 
     <button id="uploadBtn" onclick="upload()">Enviar</button>
     <p id="status"></p>
 
-    <video id="player" controls style="width:100%; max-height:300px; margin-top:20px; display:none;"></video>
+    <video id="player" controls style="width:100%;max-height:300px;display:none;margin-top:20px;"></video>
 
-    <h2>Pesquisar no Histórico</h2>
-    <input type="text" id="search" placeholder="Pesquisar..." />
+    <h2>Pesquisar no histórico</h2>
+    <input type="text" id="search" placeholder="Buscar..." />
 
     <h2>Histórico</h2>
     <div id="history"></div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
